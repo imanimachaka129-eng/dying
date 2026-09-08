@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Dye Textile Predictor (Precision 0.01g)</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --border: #cbd5e1;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .header p {
+            margin: 4px 0 0 0;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+        }
+
+        .preview-box {
+            width: 100%;
+            height: 180px;
+            border: 2px dashed var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            margin-top: 10px;
+            overflow: hidden;
+            background-color: #f1f5f9;
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        button:hover { background-color: #1d4ed8; }
+
+        .results-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 18px;
+        }
+
+        .recipe-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .recipe-table th, .recipe-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .recipe-table th {
+            background-color: #e2e8f0;
+            color: var(--primary);
+        }
+
+        .color-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-msg {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .error-msg { color: #dc2626; }
+        .loading-msg { color: #2563eb; }
+
+        .note-box {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 8px;
+            font-size: 0.8rem;
+            margin-top: 12px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Textile Dyeing Recipe Predictor</h1>
+        <p>Kubelka-Munk & Multi-Dye System (Laboratory Precision: 0.01g)</p>
+    </div>
+
+    <div class="grid-layout">
+        <div>
+            <form id="predictionForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="fabricImage">Pakia Picha ya Kitambaa</label>
+                    <input type="file" id="fabricImage" name="fabric_image" accept="image/*" onchange="previewImage(event)" required>
+                    <div class="preview-box" id="imagePreview">
+                        <span>Picha itaonekana hapa</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fabricWeight">Uzito wa Kitambaa (Grams)</label>
+                    <input type="number" id="fabricWeight" name="fabric_weight" value="8" min="0.1" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="liquorRatio">Liquor Ratio (L:G)</label>
+                    <select id="liquorRatio" name="liquor_ratio">
+                        <option value="10">1:10</option>
+                        <option value="8">1:8</option>
+                        <option value="12">1:12</option>
+                        <option value="15">1:15</option>
+                    </select>
+                </div>
+
+                <button type="submit" id="submitBtn">KOKOTOA KICHOCHEO</button>
+                <div id="statusMessage" class="status-msg"></div>
+            </form>
+        </div>
+
+        <div>
+            <div class="results-card">
+                <h3 style="margin-top:0;">Matokeo ya Utabiri (Predicted Recipe)</h3>
+                
+                <table class="recipe-table">
+                    <thead>
+                        <tr>
+                            <th>Rangi (Dye)</th>
+                            <th>Mzani (0.01g)</th>
+                            <th>Stock Solution (1% mL)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CIELAB (L*, a*, b*)</td>
+                            <td colspan="2" id="labValues">-- , -- , --</td>
+                        </tr>
+                        <tr>
+                            <td>K/S (Color Strength)</td>
+                            <td colspan="2" id="ksValue">--</td>
+                        </tr>
+                        <tr>
+                            <td><span class="color-dot" style="background:#dc2626;"></span>Reactive Red</td>
+                            <td id="redG">-- g</td>
+                            <td id="redMl">-- mL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="color-dot" style="background:#2563eb;"></span>Reactive Blue</td>
+                            <td id="blueG">-- g</td>
+                            <td id="blueMl">-- mL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="color-dot" style="background:#eab308;"></span>Reactive Yellow</td>
+                            <td id="yellowG">-- g</td>
+                            <td id="yellowMl">-- mL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="color-dot" style="background:#1e293b;"></span>Reactive Black</td>
+                            <td id="blackG">-- g</td>
+                            <td id="blackMl">-- mL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="color-dot" style="background:#ea580c;"></span>Reactive Orange/Brown</td>
+                            <td id="orangeG">-- g</td>
+                            <td id="orangeMl">-- mL</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kiasi cha Maji</strong></td>
+                            <td colspan="2" id="waterVol"><strong>-- mL</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="note-box">
+                    <strong>Ushauri wa Maabara:</strong> Kama mzani wako utasoma <code>0.00g</code> kwa ajili ya kiwango kidogo cha rangi, tumia <strong>Stock Solution (1%)</strong> kwa kutumia syringe/pipette kuchukua mL zilizoelekezwa hapo juu.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function(){
+            const output = document.getElementById('imagePreview');
+            output.innerHTML = '<img src="' + reader.result + '">';
+        };
+        if(event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    }
+
+    document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const statusMsg = document.getElementById('statusMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        statusMsg.className = 'status-msg loading-msg';
+        statusMsg.innerText = 'Inachakata picha...';
+        submitBtn.disabled = true;
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                document.getElementById('labValues').innerText = `${result.l_star}, ${result.a_star}, ${result.b_star}`;
+                document.getElementById('ksValue').innerText = result.ks_value;
+                
+                document.getElementById('redG').innerText = `${result.red_g} g`;
+                document.getElementById('redMl').innerText = `${result.red_ml} mL`;
+
+                document.getElementById('blueG').innerText = `${result.blue_g} g`;
+                document.getElementById('blueMl').innerText = `${result.blue_ml} mL`;
+
+                document.getElementById('yellowG').innerText = `${result.yellow_g} g`;
+                document.getElementById('yellowMl').innerText = `${result.yellow_ml} mL`;
+
+                document.getElementById('blackG').innerText = `${result.black_g} g`;
+                document.getElementById('blackMl').innerText = `${result.black_ml} mL`;
+
+                document.getElementById('orangeG').innerText = `${result.orange_g} g`;
+                document.getElementById('orangeMl').innerText = `${result.orange_ml} mL`;
+
+                document.getElementById('waterVol').innerHTML = `<strong>${result.water_ml} mL</strong>`;
+                
+                statusMsg.innerText = '';
+            } else {
+                statusMsg.className = 'status-msg error-msg';
+                statusMsg.innerText = result.error || 'Kuna tatizo limetokea!';
+            }
+        } catch (error) {
+            statusMsg.className = 'status-msg error-msg';
+            statusMsg.innerText = 'Imeshindwa kuwasiliana na server.';
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>
